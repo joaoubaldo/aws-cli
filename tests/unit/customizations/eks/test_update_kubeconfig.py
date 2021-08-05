@@ -262,12 +262,27 @@ class TestEKSClient(unittest.TestCase):
 
     def test_profile(self):
         self._session.profile = "profile"
+        self._correct_user_entry["name"] = "{0}-{1}".format(describe_cluster_response()["cluster"]["arn"], self._session.profile)
         self._correct_user_entry["user"]["exec"]["env"] = [
             OrderedDict([
                 ("name", "AWS_PROFILE"),
                 ("value", "profile")
             ])
         ]
+        self.assertEqual(self._client.get_user_entry(),
+                         self._correct_user_entry)
+        self._mock_client.describe_cluster.assert_called_once_with(
+            name="ExampleCluster"
+        )
+        self._session.create_client.assert_called_once_with("eks")
+
+    def test_role_arn(self):
+        self._client._role_arn = "role_arn"
+        self._correct_user_entry["name"] = "{0}-{1}".format(describe_cluster_response()["cluster"]["arn"], self._client._role_arn)
+        self._correct_user_entry["user"]["exec"]["args"].extend([
+                "--role",
+                self._client._role_arn
+            ])
         self.assertEqual(self._client.get_user_entry(),
                          self._correct_user_entry)
         self._mock_client.describe_cluster.assert_called_once_with(
