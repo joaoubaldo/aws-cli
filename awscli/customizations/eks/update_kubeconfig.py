@@ -292,8 +292,15 @@ class EKSClient(object):
 
         region = self._get_cluster_description().get("arn").split(":")[3]
 
+        name = self._get_cluster_description().get("arn", "")
+        
+        if self._role_arn is not None:
+            name = "{0}-{1}".format(name, self._role_arn)
+        if self._session.profile:
+            name = "{0}-{1}".format(name, self._session.profile)
+
         generated_user = OrderedDict([
-            ("name", self._get_cluster_description().get("arn", "")),
+            ("name", name),
             ("user", OrderedDict([
                 ("exec", OrderedDict([
                     ("apiVersion", API_VERSION),
